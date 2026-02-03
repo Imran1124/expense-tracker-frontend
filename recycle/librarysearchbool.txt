@@ -1,0 +1,279 @@
+'use client';
+import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
+import Page from '@/components/helmet-page';
+import { Link } from 'react-router-dom';
+import { useApi } from '@/hooks/useCustomQuery';
+import { libraryApi } from '@/lib';
+import { Image } from '@/components/image';
+import moment from 'moment';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem
+} from '@/components/ui/pagination';
+import {
+  ChevronLeft,
+  ChevronRight,
+  SlidersHorizontal,
+  Settings,
+  HomeIcon,
+  LogOutIcon
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { FormProviders } from '@/components/forms';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarTrigger
+} from '@/components/ui/menubar';
+import SearchBox from '@/components/search-box';
+import { useState } from 'react';
+
+const schema = yup.object({
+  email: yup.string().email().required(),
+  password: yup.string().min(8)
+});
+
+export default function index() {
+  const [page, setPage] = useState<number>(1);
+  const [perPage] = useState<number>(10);
+  const [search, setSearch] = useState<string>('');
+
+  const methods = useForm<yup.InferType<typeof schema>>({
+    defaultValues: {
+      email: '',
+      password: ''
+    },
+    resolver: yupResolver(schema)
+  });
+  const bookData = useApi<any>({
+    api: `${libraryApi.getBookList}?page=${page}&limit=${perPage}&q=${search}`,
+    value: [page, perPage],
+    options: {
+      enabled: true
+    }
+  });
+
+  // if (bookData?.isLoading) {
+  //   return (
+  //     <div className="grid grid-cols-1 gap-4 p-4">
+  //       {Array.from({ length: 4 }).map((_, index) => (
+  //         <Card key={index + 1}>
+  //           <CardContent className="mt-5">
+  //             <SkeletonLoader />
+  //           </CardContent>
+  //         </Card>
+  //       ))}
+  //     </div>
+  //   );
+  // }
+
+  return (
+    <Page title="Search Books">
+      <main className="grid flex-1 items-start gap-4 px-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+        <FormProviders methods={methods}>
+          <div className="flex mt-2 justify-center items-center space-x-4">
+            <div className="flex-1">
+              <SearchBox
+                search={search}
+                setSearch={setSearch}
+                refetch={bookData.refetch}
+                isFetching={bookData.isLoading}
+              />
+            </div>
+            <div className="flex-initial">
+              <Menubar className="border-none shadow-none">
+                <MenubarMenu>
+                  <MenubarTrigger className="rounded-full -mx-[1.2rem] hover:bg-muted/20">
+                    <SlidersHorizontal className="h-6 w-6 text-muted-foreground" />
+                  </MenubarTrigger>
+                  <MenubarContent className="w-10">
+                    <div className="flex flex-col">
+                      <div>
+                        <MenubarItem
+                          className="flex space-x-2 items-center justify-start"
+                          onClick={() => {}}
+                        >
+                          <HomeIcon className="h-5 w-5" />
+                          <h1 className="font-semibold">Subject</h1>
+                        </MenubarItem>
+                      </div>
+                      <div>
+                        <MenubarItem
+                          className="flex space-x-2 items-center justify-start"
+                          onClick={() => {}}
+                        >
+                          <input type="checkbox" />
+                          <h1 className="text-xs">Subject</h1>
+                        </MenubarItem>
+                      </div>
+                      <div>
+                        <MenubarItem
+                          className="flex space-x-2 items-center justify-start"
+                          onClick={() => {}}
+                        >
+                          <h1 className="text-xs">Subject</h1>
+                        </MenubarItem>
+                      </div>
+                      <div>
+                        <MenubarItem
+                          className="flex space-x-2 items-center justify-start"
+                          onClick={() => {}}
+                        >
+                          <h1 className="text-xs">Subject</h1>
+                        </MenubarItem>
+                      </div>
+                      <div>
+                        <MenubarItem
+                          className="flex space-x-2 items-center justify-start"
+                          onClick={() => {}}
+                        >
+                          <h1 className="text-xs">Subject</h1>
+                        </MenubarItem>
+                      </div>
+                    </div>
+                    <MenubarItem className="flex space-x-2 items-center justify-start">
+                      {/* setting */}
+                      <Settings className="h-5 w-5" />
+                      <h1 className="text-sm">Settings</h1>
+                    </MenubarItem>
+                    <MenubarSeparator />
+                    <MenubarItem
+                      className="flex space-x-2 items-center justify-start"
+                      onClick={() => {}}
+                    >
+                      {/* logout */}
+                      <LogOutIcon className="h-5 w-5 text-red-600" />
+                      <h1 className="text-sm">Logout</h1>
+                    </MenubarItem>
+                    <MenubarSeparator />
+                  </MenubarContent>
+                </MenubarMenu>
+              </Menubar>
+            </div>
+          </div>
+        </FormProviders>
+
+        {Array.isArray(bookData?.data?.data?.docs) &&
+        bookData?.data?.data?.docs?.length > 0
+          ? bookData?.data?.data?.docs?.map((item: any, index: any) => (
+              <Link
+                to={`/lms-app/student/book-details/${item?._id}`}
+                key={index + 1}
+              >
+                <Card
+                  className="overflow-hidden"
+                  x-chunk="dashboard-05-chunk-4"
+                >
+                  {item?.issueStatus === 1 && (
+                    <span className="text-xs text-white font-serif bg-red-500 px-2 rounded-lg">
+                      Issued
+                    </span>
+                  )}
+                  <CardContent className="p-6 py-3 text-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="rounded-sm overflow-hidden border">
+                        <Image
+                          src="/book.png"
+                          alt="Avatar"
+                          className="overflow-hidden w-10 h-10"
+                        />
+                      </div>
+
+                      <div className="flex-intital grid gap-1">
+                        <CardTitle className="text-md">
+                          {item.bookName}
+                        </CardTitle>
+
+                        <p className="text-xs text-muted-foreground">
+                          {item?.class?.className}{' '}
+                          <span className="text-black px-1">|</span>{' '}
+                          {item?.subject?.subject}
+                        </p>
+                      </div>
+
+                      <div className="flex-1 justify-end item-end">
+                        {item?.issueStatus === 1 && (
+                          <>
+                            <div className="flex-1 text-right text-xs">
+                              {moment(item?.returnDate).format('DD-MM-YYYY')}
+                            </div>
+                            <div className="flex-1 text-right text-xs font-serif italic">
+                              Return Date
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))
+          : !bookData?.isLoading && (
+              <div className="flex justify-center items-center w-full h-1/2">
+                <Card
+                  className="overflow-hidden mt-10"
+                  x-chunk="dashboard-05-chunk-4 "
+                >
+                  <CardContent className="p-6 py-3 text-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-intital grid gap-1">
+                        <CardTitle className="text-lg">No Books</CardTitle>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+        <div className="flex mt-4">
+          <div className="flex-initial">
+            <CardTitle className="text-lg px-2"></CardTitle>
+          </div>
+          <div className="flex-1">
+            <CardFooter>
+              <Pagination className="ml-auto mr-0 w-auto">
+                <span className="text-xs mr-2">
+                  Page {bookData?.data?.data?.page} <span>of</span>{' '}
+                  {bookData?.data?.data?.totalPages}
+                </span>
+                <PaginationContent>
+                  <PaginationItem>
+                    {bookData?.data?.data?.hasPrevPage && (
+                      <Button
+                        onClick={() => setPage(bookData?.data?.data?.page - 1)}
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </PaginationItem>
+                  <PaginationItem>
+                    {bookData?.data?.data?.hasNextPage && (
+                      <Button
+                        onClick={() => setPage(bookData?.data?.data?.page + 1)}
+                        size="icon"
+                        variant="outline"
+                        className="h-6 w-6"
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </CardFooter>
+          </div>
+        </div>
+      </main>
+    </Page>
+  );
+}

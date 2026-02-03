@@ -1,0 +1,191 @@
+import Page from '@/components/helmet-page';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { useApi } from '@/hooks/useCustomQuery';
+import { libraryApi } from '@/lib';
+import { useParams } from 'react-router-dom';
+import { PAYMENT_RECEIPT } from './type';
+import SkeletonLoader from '@/components/loaders/SkeletonLoader';
+import { Image } from '@/components/image';
+import { Separator } from '@/components/ui/separator';
+import { BookA } from 'lucide-react';
+
+export default function ProfileScreen() {
+  const { id } = useParams();
+
+  const bookData = useApi<PAYMENT_RECEIPT>({
+    api: `${libraryApi.getBookById}/${id}`,
+    options: {
+      enabled: true
+    }
+  });
+
+  if (bookData.isLoading) {
+    return (
+      <div className="p-6">
+        <Card className="mt-1">
+          <CardContent>
+            <div className="py-2">
+              <SkeletonLoader />
+              <SkeletonLoader />
+              <SkeletonLoader />
+              <SkeletonLoader />
+              <SkeletonLoader />
+              <SkeletonLoader />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <Page title="Book Details">
+      <main className="relative grid flex-1 py-0 items-start gap-4 px-4 sm:px-6 sm:py-0 md:gap-8 lg:grid-cols-3 xl:grid-cols-3">
+        <Card className="mx-auto w-full shadow-none">
+          <CardHeader>
+            <div className="rounded-sm overflow-hidden ">
+              <Image
+                src="/book.png"
+                alt="Avatar"
+                className="overflow-hidden h-40"
+              />
+            </div>
+            <CardTitle className="text-xl">
+              {bookData?.data?.data?.bookName}
+            </CardTitle>
+            <CardDescription>
+              {bookData?.data?.data?.bookDescription}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-4 mt-2">
+              <div>
+                <Label>Author :</Label>
+              </div>
+              <div>
+                <CardDescription>
+                  {' '}
+                  {bookData?.data?.data?.authorName}
+                </CardDescription>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4 mt-2">
+              <div>
+                <Label>Edition :</Label>
+              </div>
+              <div>
+                <CardDescription>
+                  {' '}
+                  {bookData?.data?.data?.bookEdition}
+                </CardDescription>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4 mt-2">
+              <div>
+                <Label>Subject :</Label>
+              </div>
+              <div>
+                <CardDescription>
+                  {' '}
+                  {bookData?.data?.data?.bookEdition}
+                </CardDescription>
+              </div>
+            </div>
+
+            {bookData?.data?.data?.levelOne && (
+              <>
+                <Separator className="my-4" />
+                <Label># Book Shelf Location</Label>
+
+                <div className="bg-yellow-400 px-4 pb-6 pt-2 mt-2">
+                  <div className="mt-4 flex flex-col">
+                    <div>
+                      <span className="border-2 border-white px-2 py-1">
+                        {bookData?.data?.data?.levelOne?.levelName}
+                      </span>
+                    </div>
+                    <div className="flex">
+                      <div className="w-1 h-4 border border-l-white ml-10"></div>
+                    </div>
+                    <div className="flex">
+                      <div className="w-1 h-4 border border-l-white ml-10"></div>
+                    </div>
+                    <div className="flex">
+                      <div className="w-1 h-4 border border-l-white ml-10"></div>
+                    </div>
+                  </div>
+
+                  {bookData?.data?.data?.levelTwo && (
+                    <div className="flex flex-col">
+                      <div className="flex">
+                        <div className="w-4 h-1 border border-top-white ml-10"></div>
+                      </div>
+                      <div>
+                        <span className="border-2 border-white px-2 py-1 ml-14">
+                          {bookData?.data?.data?.levelTwo?.levelName}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {bookData?.data?.data?.levelThree && (
+                    <div className="flex flex-col">
+                      <div className="flex">
+                        <div className="w-1 h-4 border border-l-white ml-24"></div>
+                      </div>
+                      <div className="flex">
+                        <div className="w-1 h-4 border border-l-white ml-24"></div>
+                      </div>
+                      <div className="flex">
+                        <div className="w-1 h-4 border border-l-white ml-24"></div>
+                      </div>
+                      <div className="flex">
+                        <div className="w-4 h-1 border border-top-white ml-24"></div>
+                      </div>
+                      <div>
+                        <span className="border-2 border-white px-2 py-1 ml-28">
+                          {bookData?.data?.data?.levelThree?.levelName}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {bookData?.data?.data?.levelFour && (
+                    <div className="flex flex-col">
+                      <div className="flex">
+                        <div className="w-1 h-4 border border-l-white ml-36"></div>
+                      </div>
+                      <div className="flex">
+                        <div className="w-1 h-4 border border-l-white ml-36"></div>
+                      </div>
+                      <div className="flex">
+                        <div className="w-1 h-4 border border-l-white ml-36"></div>
+                      </div>
+                      <div className="flex">
+                        <div className="w-4 h-1 border border-top-white ml-36"></div>
+                      </div>
+                      <div>
+                        <span className="border-2 border-white px-2 py-1 ml-40">
+                          {bookData?.data?.data?.levelFour?.levelName}
+                          <BookA size={16} color="red" className="inline" />
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+    </Page>
+  );
+}

@@ -1,0 +1,960 @@
+'use client';
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { useForm, useFieldArray } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { ButtonLoading, RHFTextField, FormProviders } from '@/components/forms';
+import { Separator } from '@/components/ui/separator';
+import EditDialogBox from '@/components/edit-dialog-box';
+import {
+  useApi,
+  usePostMutation,
+  usePutMutation
+} from '@/hooks/useCustomQuery';
+import { examApi } from '@/lib';
+import { ExamResponse } from './type';
+import {
+  User,
+  BookOpen,
+  Calendar,
+  Target,
+  School,
+  CheckCircle,
+  Edit3,
+  Trophy,
+  AlertCircle
+} from 'lucide-react';
+
+const EXAM_TYPE = [
+  { examType: 'Practical', totalMarks: 20, passingMarks: 5, obtainedMarks: 0 },
+  { examType: 'Theory', totalMarks: 80, passingMarks: 26, obtainedMarks: 0 }
+];
+
+// Define proper TypeScript types
+interface ExamMark {
+  examType: string;
+  totalMarks: number;
+  passingMarks: number;
+  obtainedMarks: number;
+}
+
+interface FormData {
+  examMarks: ExamMark[];
+}
+
+type Props = {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  title?: string;
+  id?: string;
+  edit?: boolean;
+  setEdit?: React.Dispatch<React.SetStateAction<boolean>>;
+  refetch?: () => void;
+};
+
+// Validation schema
+const validationSchema = yup.object().shape({
+  examMarks: yup.array().of(
+    yup.object().shape({
+      examType: yup.string().required('Exam type is required'),
+      totalMarks: yup.number().required('Total marks is required').min(0),
+      passingMarks: yup.number().required('Passing marks is required').min(0),
+      obtainedMarks: yup
+        .number()
+        .required('Obtained marks is required')
+        .min(0, 'Obtained marks cannot be negative')
+        .test(
+          'max-marks',
+          'Obtained marks cannot exceed total marks',
+          function (value) {
+            const totalMarks = this.parent.totalMarks;
+            return value <= totalMarks;
+          }
+        )
+    })
+  )
+});
+
+export default function UpdateExamFormNew({
+  open,
+  setOpen,
+  title,
+  id,
+  edit,
+  setEdit,
+  refetch
+}: Readonly<Props>) {
+  // Initialize with all exam types selected by default
+  const [selectedExamTypes, setSelectedExamTypes] = useState<string[]>(
+    EXAM_TYPE.map((item) => item.examType)
+  );
+
+  const postMutation = usePostMutation({});
+  const putMutation = usePutMutation({});
+  const { data, isFetching } = useApi<ExamResponse>({
+    api: `${examApi?.getExamMarks}/${id}`,
+    options: {
+      enabled: !!edit
+    }
+  });
+
+  const methods = useForm<FormData>({
+    resolver: yupResolver(validationSchema) as any,
+    defaultValues: {
+      examMarks: EXAM_TYPE.map((item) => ({
+        examType: item.examType,
+        totalMarks: item.totalMarks,
+        passingMarks: item.passingMarks,
+        obtainedMarks: 0
+      }))
+    }
+  });
+
+  const { fields, append, remove, replace } = useFieldArray({
+    control: methods.control,
+    name: 'examMarks'
+  });
+
+  // Calculate dynamic marks based on selected exam types
+  const calculateDynamicMarks = (examType: string, selectedTypes: string[]) => {
+    if (examType === 'Theory') {
+      // If Practical is not selected, Theory should combine both marks
+      if (!selectedTypes.includes('Practical')) {
+        const theoryMarks =
+          EXAM_TYPE.find((item) => item.examType === 'Theory')?.totalMarks ||
+          80;
+        const practicalMarks =
+          EXAM_TYPE.find((item) => item.examType === 'Practical')?.totalMarks ||
+          20;
+        const combinedMarks = theoryMarks + practicalMarks; // 80 + 20 = 100
+
+        return {
+          totalMarks: combinedMarks, // 100
+          passingMarks: Math.round(combinedMarks * 0.33) // 33% of 100 = 33
+        };
+      }
+      // If Practical is selected, Theory remains original
+      const originalTheory = EXAM_TYPE.find(
+        (item) => item.examType === 'Theory'
+      );
+      return {
+        totalMarks: originalTheory?.totalMarks || 80,
+        passingMarks: originalTheory?.passingMarks || 26
+      };
+    }
+
+    // For Practical, return original values
+    const originalData = EXAM_TYPE.find((item) => item.examType === examType);
+    return {
+      totalMarks: originalData?.totalMarks || 0,
+      passingMarks: originalData?.passingMarks || 0
+    };
+  };
+
+  // Handle checkbox change - add/remove from form array
+  const handleExamTypeChange = (examType: string, checked: boolean) => {
+    let newSelectedTypes: string[];
+
+    if (checked) {
+      newSelectedTypes = [...selectedExamTypes, examType];
+
+      // Add the exam type to form array if not exists
+      const existingIndex = fields.findIndex(
+        (field) => field.examType === examType
+      );
+      if (existingIndex === -1) {
+        const originalData = EXAM_TYPE.find(
+          (item) => item.examType === examType
+        );
+        if (originalData) {
+          const calculatedMarks = calculateDynamicMarks(
+            examType,
+            newSelectedTypes
+          );
+          append({
+            examType: examType,
+            totalMarks: calculatedMarks.totalMarks,
+            passingMarks: calculatedMarks.passingMarks,
+            obtainedMarks: 0
+          });
+        }
+      }
+    } else {
+      newSelectedTypes = selectedExamTypes.filter((type) => type !== examType);
+
+      // Remove the exam type from form array
+      const indexToRemove = fields.findIndex(
+        (field) => field.examType === examType
+      );
+      if (indexToRemove !== -1) {
+        remove(indexToRemove);
+      }
+    }
+
+    setSelectedExamTypes(newSelectedTypes);
+
+    // Update Theory marks if Practical checkbox state changed
+    if (examType === 'Practical') {
+      const theoryIndex = fields.findIndex(
+        (field) => field.examType === 'Theory'
+      );
+      if (theoryIndex !== -1) {
+        const theoryMarks = calculateDynamicMarks('Theory', newSelectedTypes);
+        methods.setValue(
+          `examMarks.${theoryIndex}.totalMarks`,
+          theoryMarks.totalMarks
+        );
+        methods.setValue(
+          `examMarks.${theoryIndex}.passingMarks`,
+          theoryMarks.passingMarks
+        );
+        // Reset obtained marks to 0 when marks change
+        methods.setValue(`examMarks.${theoryIndex}.obtainedMarks`, 0);
+      }
+    }
+  };
+
+  // Function to rebuild form array based on selected types
+  const rebuildFormArray = (selectedTypes: string[]) => {
+    const newFormArray: ExamMark[] = [];
+
+    selectedTypes.forEach((examType) => {
+      const calculatedMarks = calculateDynamicMarks(examType, selectedTypes);
+      const existingField = fields.find((field) => field.examType === examType);
+
+      newFormArray.push({
+        examType: examType,
+        totalMarks: calculatedMarks.totalMarks,
+        passingMarks: calculatedMarks.passingMarks,
+        obtainedMarks: existingField?.obtainedMarks || 0
+      });
+    });
+
+    replace(newFormArray);
+  };
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      // Reset to default state with all exam types selected
+      const defaultSelectedTypes = EXAM_TYPE.map((item) => item.examType);
+      setSelectedExamTypes(defaultSelectedTypes);
+
+      const defaultFormArray = EXAM_TYPE.map((item) => ({
+        examType: item.examType,
+        totalMarks: item.totalMarks,
+        passingMarks: item.passingMarks,
+        obtainedMarks: 0
+      }));
+
+      methods.reset({
+        examMarks: defaultFormArray
+      });
+    }
+  }, [open, methods, replace]);
+
+  // Load existing data when editing
+  useEffect(() => {
+    if (edit && data?.data?.examMarks && data?.data?.examMarks?.length > 0) {
+      const existingMarks = data.data.examMarks;
+      const selectedTypes = existingMarks.map((mark) => mark.examType);
+
+      setSelectedExamTypes(selectedTypes);
+      methods.reset({ examMarks: existingMarks });
+    }
+  }, [edit, data, methods]);
+
+  // Update form array when selected types change
+  useEffect(() => {
+    if (selectedExamTypes.length > 0) {
+      rebuildFormArray(selectedExamTypes);
+    }
+  }, [selectedExamTypes]);
+
+  const onSubmit = async (formData: FormData) => {
+    try {
+      const res = await putMutation.mutateAsync({
+        api: `${examApi.UpdateExamMarksNew}/${id}`,
+        data: {
+          examMarks: formData?.examMarks
+        }
+      });
+      if (res.data?.success) {
+        toast.success(res?.data?.message);
+      } else {
+        toast.error('Marks not updated successfully');
+      }
+      setOpen(false);
+      setEdit!(false);
+      refetch!();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const isSubmitting = postMutation.isPending || putMutation.isPending;
+
+  return (
+    <EditDialogBox
+      open={open}
+      setOpen={setOpen}
+      title={title}
+      setEdit={setEdit}
+      edit={edit}
+      isLoading={isFetching}
+    >
+      <div className="space-y-6">
+        {/* Student Information Header */}
+        {data?.data && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-100">
+            {/* Mobile Layout */}
+            <div className="block sm:hidden">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <User className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-800 text-base">
+                    {data.data.studentDetails?.firstName}{' '}
+                    {data.data.studentDetails?.lastName}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Roll No: {data.data.studentDetails?.rollNo}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <School className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                  <span className="text-gray-600">
+                    Class {data.data.className}-{data.data.sectionName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                  <span className="text-gray-600">{data.data.subjectName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                  <span className="text-gray-600">{data.data.termName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                  <span className="text-gray-600">
+                    Total: {data.data.totalMarks} marks
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Layout */}
+            <div className="hidden sm:block">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <User className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-800 text-lg">
+                    {data.data.studentDetails?.firstName}{' '}
+                    {data.data.studentDetails?.lastName}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Roll No: {data.data.studentDetails?.rollNo}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <School className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-600">
+                    Class {data.data.className}-{data.data.sectionName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-600">{data.data.subjectName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-600">{data.data.termName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-600">
+                    Total: {data.data.totalMarks} marks
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <FormProviders
+          methods={methods}
+          onSubmit={methods.handleSubmit(onSubmit)}
+        >
+          <div className="space-y-6">
+            {/* Exam Type Selection */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Select Exam Types
+              </h4>
+
+              <div className="space-y-3">
+                {EXAM_TYPE.map((item) => {
+                  const isSelected = selectedExamTypes.includes(item.examType);
+                  const currentField = fields.find(
+                    (field) => field.examType === item.examType
+                  );
+
+                  // Calculate display marks based on current selection
+                  const displayMarks =
+                    currentField ||
+                    calculateDynamicMarks(item.examType, selectedExamTypes);
+
+                  return (
+                    <div
+                      key={item.examType}
+                      className="flex items-center space-x-3"
+                    >
+                      <input
+                        type="hidden"
+                        id={item.examType}
+                        checked={isSelected}
+                        onChange={(e) =>
+                          handleExamTypeChange(item.examType, e.target.checked)
+                        }
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor={item.examType}
+                        className="text-sm font-medium text-gray-700 cursor-pointer"
+                      >
+                        {item.examType} (Total: {displayMarks.totalMarks},
+                        Passing: {displayMarks.passingMarks})
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Exam Marks Input Fields */}
+            {fields.length > 0 && (
+              <div className="space-y-4">
+                <Separator />
+                <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                  <Edit3 className="h-5 w-5 text-blue-600" />
+                  Enter Marks
+                </h4>
+
+                {fields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="bg-gray-50 rounded-lg p-4 space-y-4"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Trophy className="h-5 w-5 text-orange-600" />
+                      <h5 className="font-medium text-gray-800">
+                        {field.examType} Exam
+                      </h5>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-gray-600 flex items-center gap-1">
+                          <Target className="h-3 w-3" />
+                          Total Marks
+                        </label>
+                        <div className="p-2 bg-gray-100 rounded text-sm text-gray-700 font-medium">
+                          {field.totalMarks}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-gray-600 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          Passing Marks
+                        </label>
+                        <div className="p-2 bg-gray-100 rounded text-sm text-gray-700 font-medium">
+                          {field.passingMarks}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 col-span-2">
+                        <RHFTextField
+                          name={`examMarks.${index}.obtainedMarks`}
+                          label="Obtained Marks"
+                          type="number"
+                          placeholder="Enter marks"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Display pass/fail status */}
+                    {methods.watch(`examMarks.${index}.obtainedMarks`) > 0 && (
+                      <div className="mt-2">
+                        {methods.watch(`examMarks.${index}.obtainedMarks`) >=
+                        field.passingMarks ? (
+                          <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
+                            <CheckCircle className="h-4 w-4" />
+                            Pass
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-red-600 text-sm font-medium">
+                            <AlertCircle className="h-4 w-4" />
+                            Fail
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Submit Button */}
+            {selectedExamTypes.length > 0 && (
+              <div className="flex justify-end pt-4">
+                <ButtonLoading
+                  type="submit"
+                  isLoading={isSubmitting}
+                  className="px-6 py-2"
+                >
+                  {edit ? 'Update Marks' : 'Save Marks'}
+                </ButtonLoading>
+              </div>
+            )}
+          </div>
+        </FormProviders>
+      </div>
+    </EditDialogBox>
+  );
+}
+
+// ==================================================================================================
+
+// "use client";
+// import React, { useEffect, useState } from "react";
+// import toast from "react-hot-toast";
+// import { useForm, useFieldArray } from "react-hook-form";
+// import * as yup from "yup";
+// import { yupResolver } from "@hookform/resolvers/yup";
+// import {
+//   ButtonLoading,
+//   RHFTextField,
+//   FormProviders,
+//   RHFTextArea
+// } from "@/components/forms";
+// import { Separator } from "@/components/ui/separator";
+// import EditDialogBox from "@/components/edit-dialog-box";
+// import {
+//   useApi,
+//   usePostMutation,
+//   usePutMutation
+// } from "@/hooks/useCustomQuery";
+// import { adminApi, authApi, examApi } from "@/lib";
+// import { ExamResponse } from "./type";
+// import {
+//   User,
+//   BookOpen,
+//   Calendar,
+//   Award,
+//   Target,
+//   Calculator,
+//   FileText,
+//   Clock,
+//   School,
+//   GraduationCap,
+//   CheckCircle,
+//   Edit3,
+//   Trophy,
+//   PenTool,
+//   Hash,
+//   Brain,
+//   AlertCircle
+// } from "lucide-react";
+
+// const EXAM_TYPE = [
+//   { examType: "Practical", totalMarks: 20, passingMarks: 5, obtainedMarks: 0 },
+//   { examType: "Theory", totalMarks: 80, passingMarks: 26, obtainedMarks: 0 }
+// ];
+
+// // Define proper TypeScript types
+// interface ExamMark {
+//   examType: string;
+//   totalMarks: number;
+//   passingMarks: number;
+//   obtainedMarks: number;
+// }
+
+// interface FormData {
+//   examMarks: ExamMark[];
+// }
+
+// type Props = {
+//   open: boolean;
+//   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+//   title?: string;
+//   id?: string;
+//   edit?: boolean;
+//   setEdit?: React.Dispatch<React.SetStateAction<boolean>>;
+//   refetch?: () => void;
+// };
+
+// // Validation schema
+// const validationSchema = yup.object().shape({
+//   examMarks: yup.array().of(
+//     yup.object().shape({
+//       examType: yup.string().required("Exam type is required"),
+//       totalMarks: yup.number().required("Total marks is required").min(0),
+//       passingMarks: yup.number().required("Passing marks is required").min(0),
+//       obtainedMarks: yup
+//         .number()
+//         .required("Obtained marks is required")
+//         .min(0, "Obtained marks cannot be negative")
+//         .test(
+//           "max-marks",
+//           "Obtained marks cannot exceed total marks",
+//           function (value) {
+//             const totalMarks = this.parent.totalMarks;
+//             return value <= totalMarks;
+//           }
+//         )
+//     })
+//   )
+// });
+
+// export default function UpdateExamForm({
+//   open,
+//   setOpen,
+//   title,
+//   id,
+//   edit,
+//   setEdit,
+//   refetch
+// }: Readonly<Props>) {
+//   const [selectedExamTypes, setSelectedExamTypes] = useState<string[]>([]);
+
+//   const postMutation = usePostMutation({});
+//   const putMutation = usePutMutation({});
+//   const { data, isFetching } = useApi<ExamResponse>({
+//     api: `${examApi?.getExamMarks}/${id}`,
+//     options: {
+//       enabled: !!edit
+//     }
+//   });
+
+//   const methods = useForm<FormData>({
+//     resolver: yupResolver(validationSchema) as any,
+//     defaultValues: {
+//       examMarks: []
+//     }
+//   });
+
+//   const { fields, append, remove, replace } = useFieldArray({
+//     control: methods.control,
+//     name: "examMarks"
+//   });
+
+//   // Handle checkbox change
+//   const handleExamTypeChange = (examType: string, checked: boolean) => {
+//     if (checked) {
+//       // Add exam type to selected list
+//       setSelectedExamTypes((prev) => [...prev, examType]);
+
+//       // Find the exam type data and add to form
+//       const examData = EXAM_TYPE.find((item) => item.examType === examType);
+//       if (examData) {
+//         append({
+//           examType: examData.examType,
+//           totalMarks: examData.totalMarks,
+//           passingMarks: examData.passingMarks,
+//           obtainedMarks: 0
+//         });
+//       }
+//     } else {
+//       // Remove exam type from selected list
+//       setSelectedExamTypes((prev) => prev.filter((type) => type !== examType));
+
+//       // Remove from form fields
+//       const indexToRemove = fields.findIndex(
+//         (field) => field.examType === examType
+//       );
+//       if (indexToRemove !== -1) {
+//         remove(indexToRemove);
+//       }
+//     }
+//   };
+
+//   // Reset form when dialog closes
+//   useEffect(() => {
+//     if (!open) {
+//       setSelectedExamTypes([]);
+//       methods.reset({ examMarks: [] });
+//     }
+//   }, [open, methods]);
+
+//   // Load existing data when editing
+//   useEffect(() => {
+//     if (edit && data?.data?.examMarks) {
+//       const existingMarks = data.data.examMarks;
+//       const selectedTypes = existingMarks.map((mark) => mark.examType);
+
+//       setSelectedExamTypes(selectedTypes);
+//       methods.reset({ examMarks: existingMarks });
+//     }
+//   }, [edit, data, methods]);
+
+//   const onSubmit = async (formData: FormData) => {
+//     console.log(formData?.examMarks);
+//   };
+
+//   const isSubmitting = postMutation.isPending || putMutation.isPending;
+
+//   return (
+//     <EditDialogBox
+//       open={open}
+//       setOpen={setOpen}
+//       title={title}
+//       setEdit={setEdit}
+//       edit={edit}
+//       isLoading={isFetching}
+//     >
+//       <div className="space-y-6">
+//         {/* Student Information Header */}
+//         {data?.data && (
+//           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-100">
+//             {/* Mobile Layout */}
+//             <div className="block sm:hidden">
+//               <div className="flex items-center gap-3 mb-4">
+//                 <div className="bg-blue-100 p-2 rounded-lg">
+//                   <User className="h-5 w-5 text-blue-600" />
+//                 </div>
+//                 <div className="flex-1">
+//                   <h3 className="font-semibold text-gray-800 text-base">
+//                     {data.data.studentDetails?.firstName}{" "}
+//                     {data.data.studentDetails?.lastName}
+//                   </h3>
+//                   <p className="text-sm text-gray-600">
+//                     Roll No: {data.data.studentDetails?.rollNo}
+//                   </p>
+//                 </div>
+//               </div>
+
+//               <div className="space-y-3 text-sm">
+//                 <div className="flex items-center gap-2">
+//                   <School className="h-4 w-4 text-gray-500 flex-shrink-0" />
+//                   <span className="text-gray-600">
+//                     Class {data.data.className}-{data.data.sectionName}
+//                   </span>
+//                 </div>
+//                 <div className="flex items-center gap-2">
+//                   <BookOpen className="h-4 w-4 text-gray-500 flex-shrink-0" />
+//                   <span className="text-gray-600">{data.data.subjectName}</span>
+//                 </div>
+//                 <div className="flex items-center gap-2">
+//                   <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+//                   <span className="text-gray-600">{data.data.termName}</span>
+//                 </div>
+//                 <div className="flex items-center gap-2">
+//                   <Target className="h-4 w-4 text-gray-500 flex-shrink-0" />
+//                   <span className="text-gray-600">
+//                     Total: {data.data.totalMarks} marks
+//                   </span>
+//                 </div>
+//               </div>
+//             </div>
+
+//             {/* Desktop Layout */}
+//             <div className="hidden sm:block">
+//               <div className="flex items-center gap-4 mb-4">
+//                 <div className="bg-blue-100 p-3 rounded-lg">
+//                   <User className="h-6 w-6 text-blue-600" />
+//                 </div>
+//                 <div>
+//                   <h3 className="font-semibold text-gray-800 text-lg">
+//                     {data.data.studentDetails?.firstName}{" "}
+//                     {data.data.studentDetails?.lastName}
+//                   </h3>
+//                   <p className="text-sm text-gray-600">
+//                     Roll No: {data.data.studentDetails?.rollNo}
+//                   </p>
+//                 </div>
+//               </div>
+
+//               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+//                 <div className="flex items-center gap-2">
+//                   <School className="h-4 w-4 text-gray-500" />
+//                   <span className="text-gray-600">
+//                     Class {data.data.className}-{data.data.sectionName}
+//                   </span>
+//                 </div>
+//                 <div className="flex items-center gap-2">
+//                   <BookOpen className="h-4 w-4 text-gray-500" />
+//                   <span className="text-gray-600">{data.data.subjectName}</span>
+//                 </div>
+//                 <div className="flex items-center gap-2">
+//                   <Calendar className="h-4 w-4 text-gray-500" />
+//                   <span className="text-gray-600">{data.data.termName}</span>
+//                 </div>
+//                 <div className="flex items-center gap-2">
+//                   <Target className="h-4 w-4 text-gray-500" />
+//                   <span className="text-gray-600">
+//                     Total: {data.data.totalMarks} marks
+//                   </span>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         <FormProviders
+//           methods={methods}
+//           onSubmit={methods.handleSubmit(onSubmit)}
+//         >
+//           <div className="space-y-6">
+//             {/* Exam Type Selection */}
+//             <div className="space-y-4">
+//               <h4 className="font-medium text-gray-900 flex items-center gap-2">
+//                 <CheckCircle className="h-5 w-5 text-green-600" />
+//                 Select Exam Types
+//               </h4>
+
+//               <div className="space-y-3">
+//                 {EXAM_TYPE.map((item) => {
+//                   const isSelected = selectedExamTypes.includes(item.examType);
+//                   const currentField = fields.find(
+//                     (field) => field.examType === item.examType
+//                   );
+
+//                   // Calculate display marks based on current selection
+//                   const displayMarks = currentField;
+//                   // ||
+//                   // calculateDynamicMarks(item.examType, selectedExamTypes);
+
+//                   return (
+//                     <div
+//                       key={item.examType}
+//                       className="flex items-center space-x-3"
+//                     >
+//                       <input
+//                         type="checkbox"
+//                         id={item.examType}
+//                         checked={isSelected}
+//                         onChange={(e) =>
+//                           handleExamTypeChange(item.examType, e.target.checked)
+//                         }
+//                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+//                       />
+//                       <label
+//                         htmlFor={item.examType}
+//                         className="text-sm font-medium text-gray-700 cursor-pointer"
+//                       >
+//                         {item.examType} (Total: {displayMarks?.totalMarks},
+//                         Passing: {displayMarks?.passingMarks})
+//                       </label>
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+//             </div>
+
+//             {/* Exam Marks Input Fields */}
+//             {fields.length > 0 && (
+//               <div className="space-y-4">
+//                 <Separator />
+//                 <h4 className="font-medium text-gray-900 flex items-center gap-2">
+//                   <Edit3 className="h-5 w-5 text-blue-600" />
+//                   Enter Marks
+//                 </h4>
+
+//                 {fields.map((field, index) => (
+//                   <div
+//                     key={field.id}
+//                     className="bg-gray-50 rounded-lg p-4 space-y-4"
+//                   >
+//                     <div className="flex items-center gap-2 mb-3">
+//                       <Trophy className="h-5 w-5 text-orange-600" />
+//                       <h5 className="font-medium text-gray-800">
+//                         {field.examType} Exam
+//                       </h5>
+//                     </div>
+
+//                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//                       <div className="space-y-1">
+//                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1">
+//                           <Target className="h-3 w-3" />
+//                           Total Marks
+//                         </label>
+//                         <div className="p-2 bg-gray-100 rounded text-sm text-gray-700 font-medium">
+//                           {field.totalMarks}
+//                         </div>
+//                       </div>
+
+//                       <div className="space-y-1">
+//                         <label className="text-xs font-medium text-gray-600 flex items-center gap-1">
+//                           <AlertCircle className="h-3 w-3" />
+//                           Passing Marks
+//                         </label>
+//                         <div className="p-2 bg-gray-100 rounded text-sm text-gray-700 font-medium">
+//                           {field.passingMarks}
+//                         </div>
+//                       </div>
+
+//                       <div className="space-y-1">
+//                         <RHFTextField
+//                           name={`examMarks.${index}.obtainedMarks`}
+//                           label="Obtained Marks"
+//                           type="number"
+//                           placeholder="Enter marks"
+//                         />
+//                       </div>
+//                     </div>
+
+//                     {/* Display pass/fail status */}
+//                     {methods.watch(`examMarks.${index}.obtainedMarks`) > 0 && (
+//                       <div className="mt-2">
+//                         {methods.watch(`examMarks.${index}.obtainedMarks`) >=
+//                         field.passingMarks ? (
+//                           <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
+//                             <CheckCircle className="h-4 w-4" />
+//                             Pass
+//                           </div>
+//                         ) : (
+//                           <div className="flex items-center gap-2 text-red-600 text-sm font-medium">
+//                             <AlertCircle className="h-4 w-4" />
+//                             Fail
+//                           </div>
+//                         )}
+//                       </div>
+//                     )}
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+
+//             {/* Submit Button */}
+//             {fields.length > 0 && (
+//               <div className="flex justify-end pt-4">
+//                 <ButtonLoading
+//                   type="submit"
+//                   isLoading={isSubmitting}
+//                   className="px-6 py-2"
+//                 >
+//                   {edit ? "Update Marks" : "Save Marks"}
+//                 </ButtonLoading>
+//               </div>
+//             )}
+//           </div>
+//         </FormProviders>
+//       </div>
+//     </EditDialogBox>
+//   );
+// }
+
+// ==================================================================================
