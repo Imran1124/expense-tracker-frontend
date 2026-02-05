@@ -2,8 +2,6 @@ import { Image } from '@/components/image';
 import { BASE_URI } from '@/lib';
 
 export default function LoginTitle() {
-  const schoolName = localStorage.getItem('schoolName') ?? 'My School';
-
   return (
     <div className="mx-auto max-w-sm mb-6">
       <div className="flex justify-center">
@@ -12,7 +10,7 @@ export default function LoginTitle() {
             src={`${BASE_URI}/${localStorage.getItem('schoolLogo')}`}
             width={80}
             height={80}
-            alt={schoolName}
+            alt="School Logo"
             className="rounded-full shadow-md border-3 border-white dark:border-slate-700 transition-all duration-300 hover:shadow-lg"
           />
           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
@@ -35,7 +33,7 @@ export default function LoginTitle() {
       </div>
 
       <h1 className="text-xl font-bold text-center mt-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-        {schoolName}
+        Expense Tracker
       </h1>
 
       <p className="text-center mt-1 text-slate-500 dark:text-slate-400 text-sm">

@@ -38,7 +38,28 @@ const ForgetPassword = lazyWithRetries(
   () => import('@/pages/auth/forget-password')
 );
 
+// --------------------------------Protected Routes---------------------------------
 const Home = lazyWithRetries(() => import('@/pages/expense-tracker/home'));
+const CreateExpense = lazyWithRetries(
+  () => import('@/pages/expense-tracker/create-expense/page')
+);
+const Analytics = lazyWithRetries(
+  () => import('@/pages/expense-tracker/analytics')
+);
+const Categories = lazyWithRetries(
+  () => import('@/pages/expense-tracker/categories')
+);
+const Reports = lazyWithRetries(
+  () => import('@/pages/expense-tracker/reports')
+);
+const Users = lazyWithRetries(() => import('@/pages/expense-tracker/users'));
+const Roles = lazyWithRetries(() => import('@/pages/expense-tracker/roles'));
+const SystemReports = lazyWithRetries(
+  () => import('@/pages/expense-tracker/system-reports')
+);
+const Settings = lazyWithRetries(
+  () => import('@/pages/expense-tracker/settings')
+);
 
 export type Route = {
   layout: string;
@@ -48,6 +69,7 @@ export type Route = {
     path: string;
     element: JSX.Element;
     exact?: boolean;
+    access?: string[];
   }[];
 };
 
@@ -88,7 +110,64 @@ const routes: Route[] = [
         id: '1',
         name: 'Home',
         path: 'home',
-        element: <span>HOe</span>
+        element: <Home />,
+        access: ['User', 'Admin']
+      },
+      {
+        id: '2',
+        name: 'Add Expense',
+        path: 'create-expense',
+        element: <CreateExpense />,
+        access: ['User', 'Admin']
+      },
+      {
+        id: '3',
+        name: 'Analytics',
+        path: 'analytics',
+        element: <Analytics />,
+        access: ['User', 'Admin']
+      },
+      {
+        id: '4',
+        name: 'Categories',
+        path: 'categories',
+        element: <Categories />,
+        access: ['User', 'Admin']
+      },
+      {
+        id: '5',
+        name: 'Reports',
+        path: 'reports',
+        element: <Reports />,
+        access: ['User', 'Admin']
+      },
+      {
+        id: '6',
+        name: 'Users',
+        path: 'users',
+        element: <Users />,
+        access: ['Admin']
+      },
+      {
+        id: '7',
+        name: 'Manage Roles',
+        path: 'roles',
+        element: <Roles />,
+        access: ['Admin']
+      },
+      {
+        id: '8',
+        name: 'System Reports',
+        path: 'system-reports',
+        element: <SystemReports />,
+        access: ['Admin']
+      },
+      {
+        id: '9',
+        name: 'Settings',
+        path: 'settings',
+        element: <Settings />,
+        access: ['User', 'Admin']
       }
     ]
   }

@@ -4,7 +4,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export type { AxiosRequestConfig, AxiosResponse };
 
-export const BASE_URI = 'http://localhost:3002';
+export const BASE_URI = 'http://localhost:3001';
 // export const BASE_URI = 'https://api.executehub.com';
 // export const BASE_URI = 'https://lms.roserviceranchi.com';
 

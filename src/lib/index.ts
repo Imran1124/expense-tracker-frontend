@@ -4,3 +4,4 @@ export * from './customInputValidation';
 export * from './apis';
 export * from './session';
 export * from './services';
+export { messageService } from './messageService';

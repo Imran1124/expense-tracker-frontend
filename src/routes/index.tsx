@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthLayout } from '@/layouts';
+import { AuthLayout, DashboardLayout } from '@/layouts';
 import { AuthGuard, GuestGuard } from '@/guard';
 import NotFound from '@/pages/errors/NotFound';
 import routes from './allRoutes';
@@ -35,16 +35,26 @@ export default function AllRoutes() {
       <Route
         path="/expense-tracker/dashboard"
         element={
-          <AuthGuard>
-            <div>Auth Alyout</div>
-          </AuthGuard>
+          // <AuthGuard access={['User', 'Admin']}>
+          <DashboardLayout />
+          // </AuthGuard>
         }
       >
         {routes?.map(
           ({ layout, pages }) =>
             layout == 'dashboard' &&
-            pages?.map(({ id, path, element }) => (
-              <Route key={id} path={path} element={element} />
+            pages?.map(({ id, path, element, access }) => (
+              <Route
+                key={id}
+                path={path}
+                element={
+                  access ? (
+                    <AuthGuard access={access}>{element}</AuthGuard>
+                  ) : (
+                    element
+                  )
+                }
+              />
             ))
         )}
       </Route>

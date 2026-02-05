@@ -147,6 +147,7 @@ export function useApi<T>({
     queryFn: async () => apiFetcherGet(api, config),
     refetchOnReconnect: 'always',
     refetchOnWindowFocus: false,
+    retry: 1,
     ...options
   });
   return result as UseQueryResult<T, Error>;
@@ -184,26 +185,28 @@ export type USE_MUTATION_TYPE = {
   >;
 };
 
-const postApi = (api: API, data: {}) => {
+const postApi = (api: API, data: unknown) => {
   return axios.post(api, data);
 };
 
 export const usePostMutation = ({ options }: USE_MUTATION_TYPE) => {
   return useMutation<AxiosResponse<any, any>, Error, any, unknown>({
-    mutationFn: ({ api, data }: { api: API; data: {} }) => postApi(api, data),
+    mutationFn: ({ api, data }: { api: API; data: unknown }) =>
+      postApi(api, data),
     ...options
   });
 };
 // ==================== useMutation method end ====================
 
 // =================== usePutMutation method start ====================
-const putApi = (api: API, data: {}) => {
+const putApi = (api: API, data: unknown) => {
   return axios.put(api, data);
 };
 
 export const usePutMutation = ({ options }: USE_MUTATION_TYPE) => {
   return useMutation<AxiosResponse<any, any>, Error, any, unknown>({
-    mutationFn: ({ api, data }: { api: API; data: {} }) => putApi(api, data),
+    mutationFn: ({ api, data }: { api: API; data: unknown }) =>
+      putApi(api, data),
     ...options
   });
 };

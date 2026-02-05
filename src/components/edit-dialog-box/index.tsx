@@ -208,7 +208,8 @@ export default function DialogBox({
         onClick={handleBackdropClick}
       >
         <div
-          className="relative w-full max-h-full"
+          className="relative modal-enter w-full max-w-md 
+          "
           onClick={(e) => e.stopPropagation()}
         >
           {/* Modal content */}
