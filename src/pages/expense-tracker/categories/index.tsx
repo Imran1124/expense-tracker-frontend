@@ -1,5 +1,10 @@
+import Page from '@/components/helmet-page';
 import CategoryManagementPage from './CategoryManagementPage';
 
 export default function Categories() {
-  return <CategoryManagementPage />;
+  return (
+    <Page title="Categories">
+      <CategoryManagementPage />
+    </Page>
+  );
 }

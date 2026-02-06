@@ -40,26 +40,18 @@ const ForgetPassword = lazyWithRetries(
 
 // --------------------------------Protected Routes---------------------------------
 const Home = lazyWithRetries(() => import('@/pages/expense-tracker/home'));
-const CreateExpense = lazyWithRetries(
-  () => import('@/pages/expense-tracker/create-expense/page')
+const Expenses = lazyWithRetries(
+  () => import('@/pages/expense-tracker/expenses')
 );
-const Analytics = lazyWithRetries(
-  () => import('@/pages/expense-tracker/analytics')
-);
+
 const Categories = lazyWithRetries(
   () => import('@/pages/expense-tracker/categories')
 );
-const Reports = lazyWithRetries(
-  () => import('@/pages/expense-tracker/reports')
-);
+
 const Users = lazyWithRetries(() => import('@/pages/expense-tracker/users'));
 const Roles = lazyWithRetries(() => import('@/pages/expense-tracker/roles'));
-const SystemReports = lazyWithRetries(
-  () => import('@/pages/expense-tracker/system-reports')
-);
-const Settings = lazyWithRetries(
-  () => import('@/pages/expense-tracker/settings')
-);
+
+const Report = lazyWithRetries(() => import('@/pages/expense-tracker/reports'));
 
 export type Route = {
   layout: string;
@@ -117,30 +109,18 @@ const routes: Route[] = [
         id: '2',
         name: 'Add Expense',
         path: 'create-expense',
-        element: <CreateExpense />,
+        element: <Expenses />,
         access: ['User', 'Admin']
       },
-      {
-        id: '3',
-        name: 'Analytics',
-        path: 'analytics',
-        element: <Analytics />,
-        access: ['User', 'Admin']
-      },
+
       {
         id: '4',
         name: 'Categories',
         path: 'categories',
         element: <Categories />,
-        access: ['User', 'Admin']
+        access: ['Admin']
       },
-      {
-        id: '5',
-        name: 'Reports',
-        path: 'reports',
-        element: <Reports />,
-        access: ['User', 'Admin']
-      },
+
       {
         id: '6',
         name: 'Users',
@@ -157,16 +137,9 @@ const routes: Route[] = [
       },
       {
         id: '8',
-        name: 'System Reports',
-        path: 'system-reports',
-        element: <SystemReports />,
-        access: ['Admin']
-      },
-      {
-        id: '9',
-        name: 'Settings',
-        path: 'settings',
-        element: <Settings />,
+        name: 'Reports',
+        path: 'reports',
+        element: <Report />,
         access: ['User', 'Admin']
       }
     ]

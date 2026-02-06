@@ -91,7 +91,7 @@ const RHFSelectField = ({
         isNormal ? (
           <>
             <label
-              className="text-gray-700 dark:text-gray-200 text-sm font-semibold"
+              className="text-gray-700 dark:text-gray-200 text-xs font-bold"
               htmlFor={label}
             >
               {label}
@@ -109,7 +109,7 @@ const RHFSelectField = ({
               }}
               ref={ref}
               className={cn(
-                'flex h-12 w-full rounded-xl border border-input bg-transparent dark:bg-black px-3 py-1 text-sm text-gray-900 dark:text-gray-100 shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground dark:placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:focus-visible:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50 border-gray-300 dark:border-gray-600',
+                'flex h-9 w-full rounded-md border border-input bg-transparent dark:bg-black px-3 py-1 text-sm text-gray-900 dark:text-gray-100 shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground dark:placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:focus-visible:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50 border-gray-300 dark:border-gray-600',
                 error ? 'border-red-400 dark:border-red-500' : null,
                 className
               )}

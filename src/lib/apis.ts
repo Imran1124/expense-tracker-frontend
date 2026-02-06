@@ -51,6 +51,22 @@ export const expenseApi = {
   // Reports and Analytics
   getExpenseReport: '/expense/report',
   getExpenseSummary: '/expense/summary',
-  getMonthlyTrend: '/expense/trend'
+  getMonthlyTrend: '/expense/trend',
+  getAdminOverview: '/expense/admin/overview',
+  getUserOverview: '/expense/overview',
+
+  getUserReport: '/expense/user/report',
+  getAdminReport: '/expense/admin/report',
+
   // close Reports and Analytics
+
+  // user management api
+  getAllUsers: '/user/get-all-user',
+  uploadProfileImage: '/user/upload-image-url',
+  updateUser: '/user/update-profile',
+  getUserWithId: '/user/edit',
+  updateUserAdmin: '/user/update-user',
+  createUser: '/user/create-user',
+  updateUserStatus: '/update-user-status'
+  // close user management api
 } as const;

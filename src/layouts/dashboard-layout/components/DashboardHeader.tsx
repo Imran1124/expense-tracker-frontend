@@ -38,7 +38,7 @@ export const DashboardHeader = ({
           </button>
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-400">
-              <span className="text-sm font-bold text-white">$</span>
+              <span className="text-sm font-bold text-white">₹</span>
             </div>
             <h1 className="hidden text-xl font-bold text-gray-900 dark:text-white sm:block">
               Expense Tracker

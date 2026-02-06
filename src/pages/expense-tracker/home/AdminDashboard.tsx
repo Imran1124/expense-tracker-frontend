@@ -1,389 +1,442 @@
-import {
-  StatCard,
-  ChartCard,
-  ListCard,
-  RecentExpenseItem
-} from './DashboardCards';
-import {
-  Users,
-  TrendingUp,
-  AlertCircle,
-  Activity,
-  Plus,
-  Edit,
-  Trash2,
-  MoreVertical
-} from 'lucide-react';
-import { useState } from 'react';
-import { useAuth } from '@/store/useAuth';
-import { Modal } from '@/components/modal';
+import { useMemo } from 'react';
+import { useApi } from '@/hooks/useCustomQuery';
+import { expenseApi } from '@/lib';
 
-interface Role {
-  id: string;
-  name: string;
-  description: string;
-  userCount: number;
-  permissions: number;
-}
-
-export const AdminDashboard = () => {
-  const { user } = useAuth();
-  const [showRoleModal, setShowRoleModal] = useState(false);
-  const [roles, setRoles] = useState<Role[]>([
-    {
-      id: '1',
-      name: 'Admin',
-      description: 'Full system access',
-      userCount: 2,
-      permissions: 12
-    },
-    {
-      id: '2',
-      name: 'Manager',
-      description: 'Can manage users and view reports',
-      userCount: 5,
-      permissions: 8
-    },
-    {
-      id: '3',
-      name: 'User',
-      description: 'Can view and manage own expenses',
-      userCount: 145,
-      permissions: 4
-    },
-    {
-      id: '4',
-      name: 'Guest',
-      description: 'Read-only access',
-      userCount: 23,
-      permissions: 1
-    }
-  ]);
-
-  // Mock data
-  const systemStats = {
-    totalUsers: 175,
-    activeToday: 42,
-    newThisMonth: 12,
-    systemHealth: 98
+type BreakdownItem = {
+  _id: string;
+  totalAmount: number;
+  count: number;
+  avgAmount: number;
+  minAmount: number;
+  maxAmount: number;
+  details?: {
+    categoryName?: string;
+    description?: string;
   };
-
-  const allExpenses = [
-    {
-      title: 'All Food & Dining',
-      category: 'Food & Dining',
-      amount: 2450.75,
-      date: 'This Month',
-      type: 'expense' as const
-    },
-    {
-      title: 'All Transportation',
-      category: 'Transportation',
-      amount: 1245.5,
-      date: 'This Month',
-      type: 'expense' as const
-    },
-    {
-      title: 'All Entertainment',
-      category: 'Entertainment',
-      amount: 890.25,
-      date: 'This Month',
-      type: 'expense' as const
-    },
-    {
-      title: 'All Shopping',
-      category: 'Shopping',
-      amount: 1567.8,
-      date: 'This Month',
-      type: 'expense' as const
-    }
-  ];
-
-  const handleDeleteRole = (id: string) => {
-    setRoles(roles.filter((role) => role.id !== id));
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Admin Dashboard 🏢
-        </h1>
-        <p className="mt-1 text-gray-600 dark:text-gray-400">
-          Manage users, roles, and system settings for the expense tracker
-        </p>
-      </div>
-
-      {/* System Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Users"
-          value={systemStats.totalUsers}
-          icon={<Users size={24} />}
-          trend={8}
-          trendLabel="this month"
-          color="blue"
-        />
-        <StatCard
-          title="Active Today"
-          value={systemStats.activeToday}
-          icon={<Activity size={24} />}
-          trend={15}
-          trendLabel="vs yesterday"
-          color="green"
-        />
-        <StatCard
-          title="New Users"
-          value={systemStats.newThisMonth}
-          icon={<TrendingUp size={24} />}
-          description="This month"
-          color="purple"
-        />
-        <StatCard
-          title="System Health"
-          value={`${systemStats.systemHealth}%`}
-          icon={<AlertCircle size={24} />}
-          description="Operating normally"
-          color="yellow"
-        />
-      </div>
-
-      {/* Role Management */}
-      <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
-        <div className="border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Manage Roles & Permissions
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Create and manage user roles with specific permissions
-            </p>
-          </div>
-          <button
-            onClick={() => setShowRoleModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 transition-colors"
-          >
-            <Plus size={18} />
-            Create New Role
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Role Name
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Description
-                </th>
-                <th className="text-center px-6 py-3 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Users
-                </th>
-                <th className="text-center px-6 py-3 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Permissions
-                </th>
-                <th className="text-center px-6 py-3 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-              {roles.map((role) => (
-                <tr
-                  key={role.id}
-                  className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {role.name}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {role.description}
-                    </p>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 text-sm font-semibold">
-                      {role.userCount}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {role.permissions}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        <Edit size={18} />
-                      </button>
-                      {role.userCount === 0 && (
-                        <button
-                          onClick={() => handleDeleteRole(role.id)}
-                          className="rounded-lg p-2 text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      )}
-                      <button className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                        <MoreVertical size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* User Management and System Expenses Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* User Management Quick Access */}
-        <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            User Management
-          </h3>
-          <div className="space-y-3">
-            <button className="w-full flex items-center justify-between rounded-lg border border-gray-200 dark:border-slate-600 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                View All Users
-              </span>
-              <ArrowRight size={18} />
-            </button>
-            <button className="w-full flex items-center justify-between rounded-lg border border-gray-200 dark:border-slate-600 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Add New User
-              </span>
-              <Plus size={18} className="text-gray-400" />
-            </button>
-            <button className="w-full flex items-center justify-between rounded-lg border border-gray-200 dark:border-slate-600 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-left">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Inactive Users
-              </span>
-              <AlertCircle size={18} className="text-yellow-500" />
-            </button>
-          </div>
-        </div>
-
-        {/* System Expenses Overview */}
-        <div className="lg:col-span-2">
-          <ChartCard title="Total System Expenses">
-            <div className="space-y-4">
-              {allExpenses.map((expense, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between py-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {expense.title}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {expense.category}
-                    </p>
-                  </div>
-                  <p className="text-sm font-bold text-red-600 dark:text-red-400">
-                    ${expense.amount.toFixed(2)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </ChartCard>
-        </div>
-      </div>
-
-      {/* Create Role Modal */}
-      <Modal
-        isOpen={showRoleModal}
-        onClose={() => setShowRoleModal(false)}
-        title="Create New Role"
-        maxWidth="max-w-md"
-        actions={
-          <>
-            <button
-              onClick={() => setShowRoleModal(false)}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-slate-600 px-4 py-2 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                setShowRoleModal(false);
-                // Add logic to create role
-              }}
-              className="flex-1 rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 font-medium text-white transition-colors"
-            >
-              Create Role
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Role Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., Editor"
-              className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Description
-            </label>
-            <textarea
-              placeholder="Describe what this role can do..."
-              className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-              rows={3}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Permissions
-            </label>
-            <div className="space-y-2">
-              {['Create', 'Read', 'Update', 'Delete'].map((perm) => (
-                <label
-                  key={perm}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300"
-                    defaultChecked={perm === 'Read'}
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {perm}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Modal>
-    </div>
-  );
 };
 
-const ArrowRight = ({ size }: { size: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <line x1="5" y1="12" x2="19" y2="12" />
-    <polyline points="12 5 19 12 12 19" />
-  </svg>
-);
+type UserBreakdownItem = {
+  _id: string;
+  totalAmount: number;
+  count: number;
+  avgAmount: number;
+  minAmount: number;
+  maxAmount: number;
+  user?: {
+    fullName?: string;
+    email?: string;
+  };
+};
+
+type TrendItem = {
+  monthYear: string;
+  totalAmount: number;
+  count: number;
+  avgAmount: number;
+};
+
+type RecentExpense = {
+  _id: string;
+  amount: number;
+  paymentMethod: string;
+  expenseDate: string;
+  description?: string;
+  category?: {
+    categoryName?: string;
+  };
+};
+
+type AdminOverviewResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    report?: {
+      summary?: {
+        _id: string | null;
+        totalExpenses: number;
+        totalTransactions: number;
+        avgTransaction: number;
+        minTransaction: number;
+        maxTransaction: number;
+      };
+      breakdown?: BreakdownItem[];
+      users?: UserBreakdownItem[];
+    };
+    summary?: {
+      totalStats?: Array<{
+        _id: string | null;
+        totalExpenses: number;
+        totalTransactions: number;
+        avgTransaction: number;
+      }>;
+      paymentMethodBreakdown?: Array<{
+        _id: string;
+        total: number;
+        count: number;
+      }>;
+      recentExpenses?: RecentExpense[];
+    };
+    trend?: TrendItem[];
+  };
+};
+
+export default function AdminDashboard() {
+  const adminOverViewData = useApi<AdminOverviewResponse>({
+    api: expenseApi?.getAdminOverview,
+    key: 'adminOverViewData',
+    options: {
+      enabled: true
+    }
+  });
+
+  const reportSummary = adminOverViewData?.data?.data?.report?.summary;
+  const categoryBreakdown = (adminOverViewData?.data?.data?.report?.breakdown ||
+    []) as BreakdownItem[];
+  const userBreakdown = (adminOverViewData?.data?.data?.report?.users ||
+    []) as UserBreakdownItem[];
+  const trend = (adminOverViewData?.data?.data?.trend || []) as TrendItem[];
+  const summaryStats = adminOverViewData?.data?.data?.summary?.totalStats?.[0];
+  const paymentMethods =
+    adminOverViewData?.data?.data?.summary?.paymentMethodBreakdown || [];
+  const recentExpenses = (adminOverViewData?.data?.data?.summary
+    ?.recentExpenses || []) as RecentExpense[];
+
+  const currency = useMemo(
+    () =>
+      new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0
+      }),
+    []
+  );
+
+  const toCurrency = (value?: number) => currency.format(Number(value || 0));
+
+  const trendMax = Math.max(1, ...trend.map((item) => item.totalAmount || 0));
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(1100px_400px_at_15%_-10%,#f4b86a33,transparent),radial-gradient(900px_350px_at_80%_-20%,#5b7d5533,transparent)] dark:bg-[radial-gradient(1100px_400px_at_15%_-10%,#1f293733,transparent),radial-gradient(900px_350px_at_80%_-20%,#0ea5a333,transparent)]" />
+        <div className="relative px-4 py-10 sm:px-6 lg:px-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs uppercase tracking-[0.32em] text-muted-foreground">
+                Admin Overview
+              </p>
+              <h1 className="mt-3 text-3xl font-semibold sm:text-4xl font-['Space_Grotesk']">
+                Expense control center
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+                Monitor totals, categories, users, and recent activity in a
+                clean, focused layout.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="rounded-2xl border border-border/60 bg-card/80 p-4 text-sm text-foreground shadow-[0_18px_45px_-30px_rgba(0,0,0,0.45)] backdrop-blur">
+                <div className="font-medium">Report summary</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Last refresh just now
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                      Total
+                    </div>
+                    <div className="text-lg font-semibold">
+                      {toCurrency(reportSummary?.totalExpenses)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                      Transactions
+                    </div>
+                    <div className="text-lg font-semibold">
+                      {reportSummary?.totalTransactions || 0}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 lg:grid-cols-4">
+            {[
+              {
+                label: 'Total expenses',
+                value: toCurrency(reportSummary?.totalExpenses),
+                hint: 'Across all categories'
+              },
+              {
+                label: 'Avg transaction',
+                value: toCurrency(reportSummary?.avgTransaction),
+                hint: 'Recent overall average'
+              },
+              {
+                label: 'Min transaction',
+                value: toCurrency(reportSummary?.minTransaction),
+                hint: 'Smallest recorded'
+              },
+              {
+                label: 'Max transaction',
+                value: toCurrency(reportSummary?.maxTransaction),
+                hint: 'Largest recorded'
+              }
+            ].map((card) => (
+              <div
+                key={card.label}
+                className="group rounded-2xl border border-border/60 bg-card/90 p-5 shadow-[0_18px_45px_-30px_rgba(0,0,0,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_55px_-35px_rgba(0,0,0,0.55)]"
+              >
+                <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {card.label}
+                </div>
+                <div className="mt-3 text-2xl font-semibold">{card.value}</div>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {card.hint}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 pb-12 sm:px-6 lg:px-10">
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,0.45)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Trend
+                </div>
+                <div className="mt-2 text-lg font-semibold">
+                  Monthly momentum
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {trend.length} months
+              </div>
+            </div>
+            <div className="mt-6 space-y-4">
+              {trend.map((item) => (
+                <div
+                  key={item.monthYear}
+                  className="rounded-2xl border border-border/50 bg-muted/40 p-4"
+                >
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium">{item.monthYear}</div>
+                    <div>{toCurrency(item.totalAmount)}</div>
+                  </div>
+                  <div className="mt-3 h-2 w-full rounded-full bg-background/70">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-amber-500 via-orange-400 to-rose-400 dark:from-teal-400 dark:via-sky-400 dark:to-indigo-400"
+                      style={{
+                        width: `${(item.totalAmount / trendMax) * 100}%`
+                      }}
+                    />
+                  </div>
+                  <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+                    <span>{item.count} transactions</span>
+                    <span>Avg {toCurrency(item.avgAmount)}</span>
+                  </div>
+                </div>
+              ))}
+              {trend.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border/70 p-6 text-sm text-muted-foreground">
+                  No trend data available yet.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,0.45)]">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              Snapshot
+            </div>
+            <div className="mt-2 text-lg font-semibold">Today at a glance</div>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-2xl bg-gradient-to-br from-foreground/90 to-foreground/70 p-4 text-background">
+                <div className="text-xs uppercase tracking-[0.2em] text-background/70">
+                  Summary total
+                </div>
+                <div className="mt-2 text-2xl font-semibold">
+                  {toCurrency(summaryStats?.totalExpenses)}
+                </div>
+                <div className="mt-1 text-xs text-background/70">
+                  {summaryStats?.totalTransactions || 0} transactions
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-muted/40 p-4">
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Payment mix
+                </div>
+                <div className="mt-3 space-y-3">
+                  {paymentMethods.map(
+                    (method: { _id: string; total: number; count: number }) => (
+                      <div
+                        key={method._id}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <span className="capitalize">
+                          {method._id.replace('_', ' ')}
+                        </span>
+                        <span>{toCurrency(method.total)}</span>
+                      </div>
+                    )
+                  )}
+                  {paymentMethods.length === 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      No payment data yet.
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-card p-4">
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Average transaction
+                </div>
+                <div className="mt-2 text-xl font-semibold">
+                  {toCurrency(summaryStats?.avgTransaction)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+          <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,0.45)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Category
+                </div>
+                <div className="mt-2 text-lg font-semibold">Top categories</div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {categoryBreakdown.length} categories
+              </div>
+            </div>
+            <div className="mt-5 space-y-4">
+              {categoryBreakdown.map((item) => (
+                <div
+                  key={item._id}
+                  className="rounded-2xl border border-border/60 bg-muted/40 p-4"
+                >
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">
+                      {item.details?.categoryName || 'Unknown'}
+                    </span>
+                    <span>{toCurrency(item.totalAmount)}</span>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {item.count} transactions · Avg {toCurrency(item.avgAmount)}{' '}
+                    · Min {toCurrency(item.minAmount)} · Max{' '}
+                    {toCurrency(item.maxAmount)}
+                  </div>
+                </div>
+              ))}
+              {categoryBreakdown.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border/70 p-6 text-sm text-muted-foreground">
+                  No categories tracked yet.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,0.45)]">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              Users
+            </div>
+            <div className="mt-2 text-lg font-semibold">Top contributors</div>
+            <div className="mt-5 space-y-4">
+              {userBreakdown.map((user) => (
+                <div
+                  key={user._id}
+                  className="rounded-2xl border border-border/60 bg-card p-4"
+                >
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <div className="font-medium">
+                        {user.user?.fullName || 'Unknown user'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {user.user?.email || 'No email'}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-medium">
+                        {toCurrency(user.totalAmount)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {user.count} transactions
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Avg {toCurrency(user.avgAmount)} · Min{' '}
+                    {toCurrency(user.minAmount)} · Max{' '}
+                    {toCurrency(user.maxAmount)}
+                  </div>
+                </div>
+              ))}
+              {userBreakdown.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border/70 p-6 text-sm text-muted-foreground">
+                  No user insights available yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-3xl border border-border/60 bg-card p-6 shadow-[0_18px_50px_-35px_rgba(0,0,0,0.45)]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                Recent
+              </div>
+              <div className="mt-2 text-lg font-semibold">Latest expenses</div>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Last {recentExpenses.length} entries
+            </div>
+          </div>
+          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+            {recentExpenses.map((expense) => (
+              <div
+                key={expense._id}
+                className="rounded-2xl border border-border/60 bg-muted/40 p-4"
+              >
+                <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  {expense.paymentMethod.replace('_', ' ')}
+                </div>
+                <div className="mt-2 text-lg font-semibold">
+                  {toCurrency(expense.amount)}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {expense.category?.categoryName || 'Uncategorized'}
+                </div>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {new Date(expense.expenseDate).toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </div>
+                {expense.description && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {expense.description}
+                  </div>
+                )}
+              </div>
+            ))}
+            {recentExpenses.length === 0 && (
+              <div className="col-span-full rounded-2xl border border-dashed border-border/70 p-6 text-sm text-muted-foreground">
+                No recent expenses yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

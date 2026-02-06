@@ -48,17 +48,17 @@ export const DashboardSidebar = ({
       href: '/expense-tracker/dashboard/create-expense',
       access: ['User', 'Admin']
     },
-    {
-      icon: <BarChart3 size={20} />,
-      label: 'Analytics',
-      href: '/expense-tracker/dashboard/analytics',
-      access: ['User', 'Admin']
-    },
+    // {
+    //   icon: <BarChart3 size={20} />,
+    //   label: 'Analytics',
+    //   href: '/expense-tracker/dashboard/analytics',
+    //   access: ['User', 'Admin']
+    // },
     {
       icon: <PieChart size={20} />,
       label: 'Categories',
       href: '/expense-tracker/dashboard/categories',
-      access: ['User', 'Admin']
+      access: ['Admin']
     },
     {
       icon: <FileText size={20} />,
@@ -78,20 +78,20 @@ export const DashboardSidebar = ({
       href: '/expense-tracker/dashboard/roles',
       badge: 'New',
       access: ['Admin']
-    },
-    {
-      icon: <BarChart3 size={20} />,
-      label: 'System Reports',
-      href: '/expense-tracker/dashboard/system-reports',
-      access: ['Admin']
     }
+    // {
+    //   icon: <BarChart3 size={20} />,
+    //   label: 'System Reports',
+    //   href: '/expense-tracker/dashboard/system-reports',
+    //   access: ['Admin']
+    // }
   ];
 
-  navItems.push({
-    icon: <Settings size={20} />,
-    label: 'Settings',
-    href: '/expense-tracker/dashboard/settings'
-  });
+  // navItems.push({
+  //   icon: <Settings size={20} />,
+  //   label: 'Settings',
+  //   href: '/expense-tracker/dashboard/settings'
+  // });
 
   const isActive = (href: string) => location.pathname === href;
 
@@ -187,7 +187,7 @@ export const DashboardSidebar = ({
           </nav>
 
           {/* Help Section */}
-          <div className="mt-8 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700 p-4">
+          {/* <div className="mt-8 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700 p-4">
             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
               Need Help?
             </h4>
@@ -197,7 +197,7 @@ export const DashboardSidebar = ({
             <button className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 transition-colors">
               Contact Support
             </button>
-          </div>
+          </div> */}
         </div>
       </aside>
     </>

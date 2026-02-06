@@ -41,7 +41,10 @@ const RHFSelectField = ({
       control={control}
       render={({ field: { ref, ...field }, fieldState: { error } }) => (
         <>
-          <label className="text-gray-700 dark:text-gray-200" htmlFor={label}>
+          <label
+            className="text-gray-700 dark:text-gray-200 text-xs font-bold"
+            htmlFor={label}
+          >
             {label} {error && <span className="text-red-400">*</span>}
           </label>
           <Select
