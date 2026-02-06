@@ -63,19 +63,20 @@ export default function LoginForm() {
         methods={methods}
         onSubmit={methods.handleSubmit(onSubmit)}
       >
-        <div className="space-y-6">
-          <div className="space-y-2">
+        <div className="space-y-5">
+          <div>
             <RHFTextField
-              className="rounded-xl py-6 px-5 w-full bg-background border-gray-200  dark:border-gray-500 focus:border-primary"
               name="email"
+              label="📧 Email Address"
               placeholder="Enter your email..."
+              type="email"
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <RHFPasswordField
-              className="rounded-xl py-6 px-5 w-full bg-background border-gray-200  dark:border-gray-500 focus:border-primary"
               name="password"
+              label="🔐 Password"
               placeholder="Enter your password"
             />
           </div>
@@ -83,18 +84,18 @@ export default function LoginForm() {
           <ButtonLoading
             type="submit"
             isLoading={methods.formState.isSubmitting}
-            className="w-full rounded-xl py-5 px-4 mt-4 shadow-sm bg-primary hover:bg-primary/90 text-white font-medium transition-colors"
+            className="w-full rounded-xl py-4 px-4 mt-6 shadow-lg bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 hover:shadow-xl text-white font-bold transition-all duration-300 hover:-translate-y-1 active:scale-95"
             variant="default"
           >
-            Login
+            {methods.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
           </ButtonLoading>
 
-          <div className="flex justify-center items-center mt-4 text-sm">
+          <div className="flex justify-center items-center mt-6">
             <Link
               to="/auth/forget-password"
-              className="text-primary hover:text-primary/80 transition-colors font-medium"
+              className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors font-semibold text-sm"
             >
-              Forgot password?
+              🔑 Forgot Password?
             </Link>
           </div>
         </div>
