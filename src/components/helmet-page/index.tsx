@@ -26,7 +26,7 @@ const Page = forwardRef(
     return (
       <>
         <Helmet>
-          <title>{`${title} | LMS`}</title>
+          <title>{`${title} | Expense Tracker`}</title>
           {meta}
         </Helmet>
         <div ref={ref} {...other} className="bg-gray-50 dark:bg-gray-900">
