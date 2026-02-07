@@ -14,9 +14,6 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    const SID = localStorage.getItem('SID');
-    config.headers['x-school-id'] = SID;
-    // localStorage.removeItem('authenticated');
     if (token) {
       // set token to header
       config.headers['Authorization'] = `Bearer ${token}`;

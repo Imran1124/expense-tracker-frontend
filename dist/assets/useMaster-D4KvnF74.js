@@ -1,0 +1,1 @@
+import{a as e}from"./useCustomQuery-aeqDX-8k.js";import{e as t}from"./index-B2i-Z-2r.js";import"./router-DGWWDTWv.js";const i=()=>e({api:`${t.getAllCategories}?page=1&limit=100`,key:"getAllCategoriesMaster",options:{enabled:!0}}),l=()=>e({api:`${t.getAllRoles}?page=1&limit=100`,key:"getAllRolesMaster",options:{enabled:!0}});export{l as a,i as u};

@@ -43,26 +43,15 @@ export default function SendOtpViaEmail({ next, data }: Readonly<IProps>) {
   };
   return (
     <>
-      <div className="px-6 lg:px-0 mx-auto max-w-sm mb-4">
-        {/* logo */}
-        <div className="flex justify-center">
-          {/* <Image
-          src="https://images.unsplash.com/photo-1620288627223-53302f4e8c74?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          width={100}
-          height={100}
-          alt="Logo"
-          className="rounded-full"
-        /> */}
+      <div className="mb-4">
+        <div className="flex justify-center mb-2">
+          {/* Add logo here if needed */}
         </div>
-
-        <h1 className="text-3xl font-bold text-center mt-4 text-green-400">
-          {/* title */}
+        <h1 className="text-2xl font-semibold text-center mt-2 text-primary">
           Send OTP
         </h1>
-
-        {/* subtitle */}
-        <p className="text-center mt-2 text-muted-foreground text-xs">
-          Enter your email to send OTP to your email address
+        <p className="text-center mt-2 text-muted-foreground text-sm">
+          Enter your email to receive a one-time password
         </p>
       </div>
       <FormProviders
@@ -70,25 +59,20 @@ export default function SendOtpViaEmail({ next, data }: Readonly<IProps>) {
         onSubmit={methods.handleSubmit(onSubmit)}
       >
         <div className="space-y-4">
-          <div className="space-y-2">
-            <RHFTextField
-              className="rounded-xl py-6 px-5 w-full bg-background"
-              name="email"
-              inputValidation={['email', 'removeSpace']}
-              placeholder="Enter your email"
-            />
-          </div>
-
-          <div>
-            <ButtonLoading
-              type="submit"
-              isLoading={methods.formState.isSubmitting}
-              className="w-full rounded-xl py-5 px-4 mt-2 shadow-none"
-              variant="outline"
-            >
-              Send OTP
-            </ButtonLoading>
-          </div>
+          <RHFTextField
+            className="rounded-lg py-4 px-4 w-full bg-background border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-primary"
+            name="email"
+            inputValidation={['email', 'removeSpace']}
+            placeholder="Enter your email"
+          />
+          <ButtonLoading
+            type="submit"
+            isLoading={methods.formState.isSubmitting}
+            className="w-full rounded-lg py-4 px-4 mt-2 shadow-md bg-primary text-white hover:bg-primary/90 transition"
+            variant="default"
+          >
+            Send OTP
+          </ButtonLoading>
         </div>
       </FormProviders>
     </>

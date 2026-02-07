@@ -53,6 +53,14 @@ const Roles = lazyWithRetries(() => import('@/pages/expense-tracker/roles'));
 
 const Report = lazyWithRetries(() => import('@/pages/expense-tracker/reports'));
 
+const Profile = lazyWithRetries(
+  () => import('@/pages/expense-tracker/profile')
+);
+
+const ForgotPassword = lazyWithRetries(
+  () => import('@/pages/auth/forget-password')
+);
+
 export type Route = {
   layout: string;
   pages: {
@@ -92,6 +100,12 @@ const routes: Route[] = [
         name: 'Otp Login',
         path: 'otp-login',
         element: <OtpLogin />
+      },
+      {
+        id: '5',
+        name: 'Forgot Password',
+        path: 'forgot-password',
+        element: <ForgotPassword />
       }
     ]
   },
@@ -140,6 +154,13 @@ const routes: Route[] = [
         name: 'Reports',
         path: 'reports',
         element: <Report />,
+        access: ['User', 'Admin']
+      },
+      {
+        id: '9',
+        name: 'Profile',
+        path: 'profile',
+        element: <Profile />,
         access: ['User', 'Admin']
       }
     ]

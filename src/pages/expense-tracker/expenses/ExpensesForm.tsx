@@ -24,9 +24,10 @@ import {
 } from '@/hooks/useCustomQuery';
 import { expenseApi } from '@/lib';
 import { ExpenseResponse } from './type';
-import { useRoleList } from '@/hooks/useMaster';
+
 import { X } from 'lucide-react';
 import { useCategoryList } from '@/hooks/useMaster';
+import { FormSkeleton } from '@/components/loaders';
 
 // categoryId, amount, expenseDate, paymentMethod, description, tags
 
@@ -45,7 +46,6 @@ type FormData = yup.InferType<typeof schema>;
 type Props = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  title?: string;
   id?: string;
   edit?: boolean;
   setEdit?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -58,7 +58,6 @@ type Props = {
 export default function UserForm({
   open,
   setOpen,
-  title,
   id,
   edit,
   setEdit,
@@ -194,9 +193,7 @@ export default function UserForm({
         </DialogHeader>
 
         {isFetching && edit ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+          <FormSkeleton fields={5} />
         ) : (
           <FormProviders
             methods={methods}

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useApi } from '@/hooks/useCustomQuery';
 import { expenseApi } from '@/lib';
+import { DashboardSkeleton } from '@/components/loaders';
 
 type BreakdownItem = {
   _id: string;
@@ -114,6 +115,10 @@ export default function AdminDashboard() {
   const toCurrency = (value?: number) => currency.format(Number(value || 0));
 
   const trendMax = Math.max(1, ...trend.map((item) => item.totalAmount || 0));
+
+  if (adminOverViewData?.isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

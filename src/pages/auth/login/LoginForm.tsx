@@ -12,7 +12,6 @@ import {
 import { useStore } from '@/store';
 import { usePostMutation } from '@/hooks/useCustomQuery';
 import { authApi, getErrorMessage } from '@/lib';
-import { Link } from 'react-router-dom';
 
 const schema = yup.object({
   email: yup
@@ -90,14 +89,14 @@ export default function LoginForm() {
             {methods.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
           </ButtonLoading>
 
-          <div className="flex justify-center items-center mt-6">
+          {/* <div className="flex justify-center items-center mt-6">
             <Link
               to="/auth/forget-password"
               className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors font-semibold text-sm"
             >
               🔑 Forgot Password?
             </Link>
-          </div>
+          </div> */}
         </div>
       </FormProviders>
     </>

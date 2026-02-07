@@ -38,15 +38,22 @@ export default function ForgetPassword() {
   };
 
   return (
-    <Page title="Login">
-      <div className="flex flex-col w-full justify-center h-screen px-6 lg:px-0 mx-auto max-w-sm">
-        {{
-          0: <SendOtpViaEmail next={next} data={data} />,
-          1: (
-            <VerifyOtp next={next} prev={prev} data={data} setData={setData} />
-          ),
-          2: <ChangePassword prev={prev} data={data} setData={setData} />
-        }[page] || null}
+    <Page title="Forgot Password">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted-foreground">
+        <div className="w-full max-w-md p-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800">
+          {{
+            0: <SendOtpViaEmail next={next} data={data} />,
+            1: (
+              <VerifyOtp
+                next={next}
+                prev={prev}
+                data={data}
+                setData={setData}
+              />
+            ),
+            2: <ChangePassword prev={prev} data={data} setData={setData} />
+          }[page] || null}
+        </div>
       </div>
     </Page>
   );

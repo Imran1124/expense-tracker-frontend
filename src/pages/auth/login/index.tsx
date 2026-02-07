@@ -13,7 +13,7 @@ export default function Login() {
           {/* Card Container */}
           <div className="rounded-3xl bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-800 dark:to-purple-900/20 shadow-2xl dark:shadow-purple-900/30 backdrop-blur-xl overflow-hidden border border-purple-200/30 dark:border-purple-900/30">
             {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 p-8 text-white text-center relative overflow-hidden">
+            {/* <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500 p-8 text-white text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-br from-white/10 to-transparent"></div>
               <div className="relative z-10">
                 <div className="flex items-center justify-center gap-2 mb-4">
@@ -26,7 +26,7 @@ export default function Login() {
                   Welcome back! Manage your finances smartly.
                 </p>
               </div>
-            </div>
+            </div> */}
 
             {/* Form Container */}
             <div className="p-8 lg:p-10">
@@ -47,7 +47,7 @@ export default function Login() {
           <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
             Don't have an account?{' '}
             <a
-              href="/auth/register"
+              href="/expense-tracker/auth/register"
               className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
             >
               Sign up here

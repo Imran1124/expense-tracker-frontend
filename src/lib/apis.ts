@@ -11,20 +11,13 @@ export const authApi = {
   resetPassword: '/auth/reset-password',
   getUser: '/user/get-user',
   updateProfile: '/user/update-profile',
-  changePassword: '/user/change-password'
+  changePassword: '/user/change-password',
+  sendOtpViaEmail: '/auth/send-email-otp',
+  verifyOtp: '/auth/verify-otp',
+  loginWithOtp: '/auth/send-mobile-otp',
+  updateDeviceToken: 'auth/update-device-token'
 } as const;
 
-// router.post('/create-role', CreateRole); // endpoint: /role/create-role, body{roleName, description}
-// router.get('/get-all-role', GetAllRole); // endpoint: /role/get-all-role
-// router.put('/update-role/:id', UpdateRole); // endpoint: /role/update-role/:id
-// router.delete('/delete-role/:id', DeleteRole); // endpoint: /role/delete-role/:id
-// router.get('/get-role-by-id/:id', GetRoleById); // endpoint: /role/get-role-by-id/:id
-
-// router.post('/create-category', CreateCategory); // endpoint: /category/create-category, body{categoryName, description}
-// router.get('/get-all-category', GetAllCategory); // endpoint: /category/get-all-category
-// router.put('/update-category/:id', UpdateCategory); // endpoint: /category/update-category/:id
-// router.delete('/delete-category/:id', DeleteCategory); // endpoint: /category/delete-category/:id
-// router.get('/get-category-by-id/:id', GetCategoryById); // endpoint: /category/get-category-by-id/:id
 export const expenseApi = {
   // role api
   createRole: '/role/create-role',

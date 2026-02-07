@@ -4,12 +4,9 @@ import {
   LayoutDashboard,
   TrendingUp,
   PieChart,
-  Settings,
   Users,
   FileText,
   Lock,
-  Tag,
-  BarChart3,
   X,
   Zap
 } from 'lucide-react';

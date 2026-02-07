@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useApi } from '@/hooks/useCustomQuery';
 import { expenseApi } from '@/lib';
+import { DashboardSkeleton } from '@/components/loaders';
 
 type BreakdownItem = {
   _id: string;
@@ -127,6 +128,10 @@ export default function UserDashboard() {
   const toCurrency = (value?: number) => currency.format(Number(value || 0));
 
   const trendMax = Math.max(1, ...trend.map((item) => item.totalAmount || 0));
+
+  if (userOverviewData?.isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20 dark:from-slate-900 dark:via-purple-900/10 dark:to-slate-900">

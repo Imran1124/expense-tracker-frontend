@@ -1,9 +1,10 @@
 import Page from '@/components/helmet-page';
-import { useApi, usePutMutation } from '@/hooks/useCustomQuery';
+import { useApi } from '@/hooks/useCustomQuery';
 import { expenseApi } from '@/lib';
 import { FetchUsersResponse } from './type';
 import { useState } from 'react';
 import UserForm from './UserForm';
+import { TableSkeleton } from '@/components/loaders';
 import {
   Table,
   TableBody,
@@ -21,15 +22,6 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -37,7 +29,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import toast from 'react-hot-toast';
 import {
   Plus,
   Edit2,
@@ -51,14 +42,10 @@ import {
 
 export default function Users() {
   const [page, setPage] = useState<number>(1);
-  const [perPage, setPerPage] = useState<number>(10);
   const [search, setSearch] = useState<string>('');
   const [open, setOpen] = useState(false);
   const [id, setId] = useState<string>('');
   const [edit, setEdit] = useState(false);
-  const [deleteId, setDeleteId] = useState<string>('');
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const putMutation = usePutMutation({});
 
   const userData = useApi<FetchUsersResponse>({
     api: expenseApi?.getAllUsers,
@@ -73,11 +60,11 @@ export default function Users() {
   };
 
   const handleDelete = (userId: string) => {
-    setDeleteId(userId);
-    setOpenDeleteDialog(true);
+    // TODO: Implement delete functionality
+    console.log('Delete user:', userId);
   };
 
-  const confirmDelete = async () => {
+  /* const confirmDelete = async () => {
     try {
       const res = await putMutation.mutateAsync({
         api: `${expenseApi.updateUserStatus}/${deleteId}`
@@ -94,7 +81,7 @@ export default function Users() {
       setOpenDeleteDialog(false);
       setDeleteId('');
     }
-  };
+  }; */
 
   const handleAddNew = () => {
     setEdit(false);
@@ -191,9 +178,7 @@ export default function Users() {
           </CardHeader>
           <CardContent>
             {userData.isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
+              <TableSkeleton rows={5} columns={6} />
             ) : users.length === 0 ? (
               <div className="text-center py-12">
                 <UsersIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -330,8 +315,8 @@ export default function Users() {
         refetch={userData.refetch}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+      {/* Delete Confirmation Dialog - TODO: Implement delete functionality */}
+      {/* <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete User</AlertDialogTitle>
@@ -345,7 +330,7 @@ export default function Users() {
               This user will be permanently removed from the system.
             </p>
           </div>
-          {/* <div className="flex gap-3 justify-end">
+          <div className="flex gap-3 justify-end">
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
@@ -354,9 +339,9 @@ export default function Users() {
             >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
-          </div> */}
+          </div>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog> */}
     </Page>
   );
 }

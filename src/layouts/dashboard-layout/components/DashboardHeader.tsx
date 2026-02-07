@@ -1,27 +1,15 @@
 import { useAuth } from '@/store/useAuth';
-import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import {
-  Menu,
-  LogOut,
-  User,
-  Bell,
-  Sun,
-  Moon,
-  ChevronDown,
-  Settings
-} from 'lucide-react';
+import { Menu, LogOut, User, Bell, Sun, Moon, ChevronDown } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardHeaderProps {
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
 }
 
-export const DashboardHeader = ({
-  sidebarOpen,
-  onToggleSidebar
-}: DashboardHeaderProps) => {
+export const DashboardHeader = ({ onToggleSidebar }: DashboardHeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -156,20 +144,20 @@ export const DashboardHeader = ({
                   </p>
                 </div>
                 <div className="p-2">
-                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 dark:hover:from-purple-900/30 dark:hover:to-blue-900/30 rounded-lg transition-all duration-200">
+                  <button
+                    onClick={() => {
+                      navigate('/expense-tracker/dashboard/profile');
+                      setDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 dark:hover:from-purple-900/30 dark:hover:to-blue-900/30 rounded-lg transition-all duration-200"
+                  >
                     <User
                       size={18}
                       className="text-purple-600 dark:text-purple-400"
                     />
                     Profile Settings
                   </button>
-                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-900/30 dark:hover:to-cyan-900/30 rounded-lg transition-all duration-200">
-                    <Settings
-                      size={18}
-                      className="text-blue-600 dark:text-blue-400"
-                    />
-                    Settings
-                  </button>
+
                   <div className="border-t border-purple-100 dark:border-purple-900/30 my-2"></div>
                   <button
                     onClick={handleLogout}

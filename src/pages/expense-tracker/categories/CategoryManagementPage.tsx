@@ -1,16 +1,8 @@
 import { useState } from 'react';
 import moment from 'moment';
-import {
-  Plus,
-  Pencil,
-  Tag,
-  Calendar,
-  Layers,
-  Search,
-  FileText,
-  Trash2
-} from 'lucide-react';
+import { Plus, Pencil, Tag, Calendar, Layers, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { TableSkeleton } from '@/components/loaders';
 import {
   Card,
   CardContent,
@@ -40,7 +32,6 @@ import { CategoriesResponse } from './type';
 import PaginationComponent from '@/components/pagination';
 import { Separator } from '@/components/ui/separator';
 import SearchBox from '@/components/search-box';
-import Spinner from '@/components/loaders/Spinner';
 import CategoryForm from './CategoryForm';
 
 export default function CategoryManagementPage() {
@@ -195,13 +186,8 @@ export default function CategoryManagementPage() {
 
           <CardContent className="p-0">
             {categoryListData.isLoading ? (
-              <div className="flex h-96 items-center justify-center">
-                <div className="text-center space-y-3">
-                  <Spinner />
-                  <p className="text-sm text-muted-foreground">
-                    Loading categories...
-                  </p>
-                </div>
+              <div className="p-6">
+                <TableSkeleton rows={5} columns={5} />
               </div>
             ) : categories.length === 0 ? (
               <div className="flex h-96 flex-col items-center justify-center gap-4 text-center">

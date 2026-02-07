@@ -1,4 +1,4 @@
-import { ArrowUp, ArrowDown, TrendingUp } from 'lucide-react';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface StatCardProps {
   title: string;

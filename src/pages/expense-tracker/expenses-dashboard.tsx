@@ -4,41 +4,27 @@ import {
   TrendingUp,
   DollarSign,
   Filter,
-  ChevronDown,
   Home,
   BarChart3,
-  Eye,
-  Edit2,
   Trash2,
   X,
   ChevronLeft,
   ChevronRight,
   Search,
-  Calendar,
   CreditCard,
   Tag
 } from 'lucide-react';
 import {
   useGetExpenses,
-  useCreateExpense,
-  useUpdateExpense,
   useDeleteExpense,
   useGetCategories,
   useGetExpenseSummary,
   useGetExpenseReport,
   useGetMonthlyTrend
 } from '@/hooks/useExpense';
-import {
-  ExpenseForm,
-  ExpenseList,
-  ExpenseDetail
-} from '@/components/index.expense';
-import {
-  IExpense,
-  ICreateExpensePayload,
-  IExpenseFilters
-} from '@/types/expenseType';
+import { IExpense, IExpenseFilters } from '@/types/expenseType';
 import { messageService } from '@/lib';
+import { ExpenseListSkeleton } from '@/components/loaders';
 
 export default function ExpensesDashboard() {
   // ==================== State ====================
@@ -47,9 +33,6 @@ export default function ExpensesDashboard() {
   );
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<IExpense | null>(null);
-  const [selectedExpense, setSelectedExpense] = useState<IExpense | null>(null);
-  const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [filterPeriod, setFilterPeriod] = useState<
     'week' | 'month' | 'year' | 'all'
   >('month');
@@ -66,21 +49,16 @@ export default function ExpensesDashboard() {
   // ==================== Data Queries ====================
   const { data: expenses, isLoading: isLoadingExpenses } =
     useGetExpenses(filters);
-  const { data: categories = [], isLoading: isLoadingCategories } =
-    useGetCategories();
+  const { data: categories = [] } = useGetCategories();
   const { data: summary = null } = useGetExpenseSummary(filterPeriod);
   const { data: report = null } = useGetExpenseReport({ groupBy: 'category' });
   const { data: trend = [] } = useGetMonthlyTrend(6);
 
   // ==================== Mutations ====================
-  const { mutateAsync: createExpense, isPending: isCreating } =
-    useCreateExpense();
-  const { mutateAsync: updateExpense, isPending: isUpdating } =
-    useUpdateExpense();
   const { mutateAsync: deleteExpense } = useDeleteExpense();
 
   // ==================== Handlers ====================
-  const handleCreateExpense = useCallback(
+  /* const handleCreateExpense = useCallback(
     async (data: ICreateExpensePayload) => {
       try {
         await createExpense(data);
@@ -92,9 +70,9 @@ export default function ExpensesDashboard() {
       }
     },
     [createExpense]
-  );
+  ); */
 
-  const handleUpdateExpense = useCallback(
+  /* const handleUpdateExpense = useCallback(
     async (data: ICreateExpensePayload) => {
       if (!editingExpense?._id) return;
       try {
@@ -107,7 +85,7 @@ export default function ExpensesDashboard() {
       }
     },
     [editingExpense, updateExpense]
-  );
+  ); */
 
   const handleDeleteExpense = useCallback(
     async (id: string) => {
@@ -115,7 +93,6 @@ export default function ExpensesDashboard() {
       try {
         await deleteExpense(id);
         messageService.success('Expense deleted successfully');
-        setDetailModalOpen(false);
       } catch (error: any) {
         messageService.error(error.message || 'Failed to delete expense');
       }
@@ -123,16 +100,16 @@ export default function ExpensesDashboard() {
     [deleteExpense]
   );
 
-  const handleEdit = useCallback((expense: IExpense) => {
+  /* const handleEdit = useCallback((expense: IExpense) => {
     setEditingExpense(expense);
     setShowFormModal(true);
     setDetailModalOpen(false);
-  }, []);
+  }, []); */
 
-  const handleViewDetails = useCallback((expense: IExpense) => {
+  /* const handleViewDetails = useCallback((expense: IExpense) => {
     setSelectedExpense(expense);
     setDetailModalOpen(true);
-  }, []);
+  }, []); */
 
   const handleOpenCreateForm = useCallback(() => {
     setEditingExpense(null);
@@ -453,8 +430,7 @@ export default function ExpensesDashboard() {
                     {expenses?.docs?.slice(0, 5).map((expense) => (
                       <tr
                         key={expense._id}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer"
-                        onClick={() => handleViewDetails(expense)}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
                       >
                         <td className="px-6 py-3 text-slate-700 dark:text-slate-300">
                           {new Date(expense.expenseDate).toLocaleDateString()}
@@ -572,10 +548,8 @@ export default function ExpensesDashboard() {
             {/* List Component */}
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
               {isLoadingExpenses ? (
-                <div className="p-12 text-center">
-                  <div className="inline-block animate-spin">
-                    <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
-                  </div>
+                <div className="p-6">
+                  <ExpenseListSkeleton count={10} />
                 </div>
               ) : expenses && expenses.docs.length > 0 ? (
                 <>
@@ -635,7 +609,7 @@ export default function ExpensesDashboard() {
                             </td>
                             <td className="px-6 py-4 text-center">
                               <div className="flex items-center justify-center gap-1">
-                                <button
+                                {/* <button
                                   onClick={() => handleViewDetails(expense)}
                                   className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors"
                                 >
@@ -646,7 +620,7 @@ export default function ExpensesDashboard() {
                                   className="p-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded transition-colors"
                                 >
                                   <Edit2 className="h-4 w-4" />
-                                </button>
+                                </button> */}
                                 <button
                                   onClick={() =>
                                     handleDeleteExpense(expense._id!)
@@ -745,7 +719,9 @@ export default function ExpensesDashboard() {
               </button>
             </div>
             <div className="p-6">
-              <ExpenseForm
+              {/* TODO: Implement ExpenseForm component */}
+              <p>Expense form placeholder - Component needs to be created</p>
+              {/* <ExpenseForm
                 isEdit={!!editingExpense}
                 initialData={editingExpense || undefined}
                 categories={categories}
@@ -757,14 +733,15 @@ export default function ExpensesDashboard() {
                   setShowFormModal(false);
                   setEditingExpense(null);
                 }}
-              />
+              /> */}
             </div>
           </div>
         </div>
       )}
 
       {/* Detail Modal */}
-      {selectedExpense && (
+      {/* TODO: Implement ExpenseDetail component */}
+      {/* {selectedExpense && (
         <ExpenseDetail
           expense={selectedExpense}
           isOpen={detailModalOpen}
@@ -775,7 +752,7 @@ export default function ExpensesDashboard() {
           onEdit={handleEdit}
           onDelete={handleDeleteExpense}
         />
-      )}
+      )} */}
     </div>
   );
 }
